@@ -119,7 +119,7 @@ Para poder acceder a la interfaz web de Nagios, crea la cuenta `nagiosadmin`:
 htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin
 ```
 
-> _[!NOTE]_
+> [!NOTE]
 > Cuando agregues usuarios adicionales en el futuro, no uses `-c` para evitar reemplazar la cuenta `nagiosadmin`.*
 
 ## Iniciar el Servicio de Apache
