@@ -7,7 +7,7 @@
 La instalación de Nagios Core se realizará en un sistema con las siguientes características mínimas:
 
 - **Sistema Operativo:** RHEL 9.4
-- **Disco:** 20 GB de espacio libre
+- **Disco:** 20 GB de espacio
 - **Memoria RAM:** 4 GB
 - **CPU:** 4 vCPUs
 
@@ -147,7 +147,7 @@ http://IP_LOCAL/nagios
 http://core-013.domain.local/nagios
 ```
 
-Inicia sesión con el nombre de usuario `nagiosadmin` y la contraseña que configuraste previamente. Después de iniciar sesión, deberías ver la interfaz de Nagios.
+Inicia sesión con el nombre de usuario `nagiosadmin` y la contraseña que configuraste previamente. Después deberías ver la interfaz de Nagios.
 
 Ten en cuenta que solo se ha instalado el motor de Nagios Core y verás errores relacionados con los hosts y servicios, ya que no se ha configurado nada aún para monitorear.
 
@@ -197,9 +197,7 @@ Apunta tu navegador a la dirección IP o FQDN de tu servidor Nagios Core:
 
 Ve a un objeto de host o servicio y selecciona "Reprogramar la siguiente verificación" en el menú de Comandos. El error anterior debería desaparecer y ahora se mostrará la salida correcta.
 
-## Administrar el Servicio de Nagios
-
-Puedes controlar el servicio de Nagios con los siguientes comandos:
+> [!Note] Puedes controlar el servicio de Nagios con los siguientes comandos:
 
 ```bash
 systemctl start nagios.service   # Inicia el servicio de Nagios
@@ -208,10 +206,15 @@ systemctl restart nagios.service # Reinicia el servicio de Nagios
 systemctl status nagios.service  # Muestra el estado del servicio de Nagios
 ```
 
+# Instalación del primer cliente Nagios, utilizando el agente NCPA.
 
+La instalación del cliente Nagios se realizará en un sistema con las siguientes características:
 
+- **Sistema Operativo:** Red Hat 8.10
+- **Disco:** 5 GB de espacio 
+- **Memoria RAM:** 2 GB
+- **CPU:** 1 vCPUs
 
-# Instalación de cliente Nagios con NCPA en Linux basado en RPM.
 ### El primer paso es instalar el repositorio
 
 ```
@@ -232,7 +235,7 @@ Busque la siguiente línea:
 ```
 community_string = mytoken
 ```
-Cámbielo al token requerido, por ejemplo:
+Reemplace mytoken con un token seguro de su elección. Por ejemplo:
 ```
 community_string = Str0ngT0k3n
 ```
@@ -249,97 +252,106 @@ firewall-cmd --reload
 ```
 
 ### Probar NCPA
-Para garantizar que la instalación se haya realizado correctamente y que NCPA esté escuchando, intente acceder a la interfaz web del agente. Para ello, necesitará saber:
+Para asegurarse de que la instalación se realizó correctamente y que NCPA está funcionando, acceda a su interfaz web. Para ello, necesitará:
 
-- La dirección IP del equipo donde instaló NCPA
-- El token o la cadena de comunidad que configuró para NCPA
+La dirección IP del equipo donde instaló NCPA.
 
-Abra un navegador web y conéctese a la interfaz web de NCPA mediante la siguiente URL:
-`https://<Dirección IP de NCPA>:5693/`
+El token que configuró para la autenticación.
 
-Aparecerá un mensaje de seguridad.
-Esto es completamente normal y previsible. `NCPA` utiliza certificados autofirmados, ya que permiten cifrar la comunicación. Su navegador web le advierte porque desconoce el certificado.
-Deberá hacer clic en "Avanzado" y luego en "Agregar excepción" o "Continuar a xxx" para poder usar la página de `NCPA`.
+Abra un navegador web y acceda a la interfaz de NCPA con la siguiente URL:
 
-# Iniciar Monitoreo en Nagios Core
-Una de las formas más fáciles de comenzar a monitorear usando comprobaciones activas es ejecutando el Asistente de configuración `NCPA`
+```
+https://<Dirección IP de NCPA>:5693/
+```
 
-### Descargando check_ncpa.py
-Si está utilizando una instalación estándar de Nagios Core, comience descargando el check_en.py plugin en el directorio de plugins, normalmente `/usr/local/nagios/libexe`
+Es posible que el navegador muestre una advertencia de seguridad. Esto ocurre porque NCPA utiliza un certificado autofirmado para cifrar la comunicación, y el navegador no lo reconoce como una entidad de confianza.
+
+Para continuar, haga clic en "Avanzado" y luego en "Agregar excepción" o "Continuar a xxx", según el navegador que esté utilizando.
+
+
+# Iniciar monitoreo en Nagios Core
+Para monitorear equipos mediante comprobaciones activas, puede utilizar el Asistente de configuración de NCPA.
+Esto descarga, descomprime y copia el plugin check_ncpa.py al directorio de plugins de Nagios, donde se utilizará para realizar comprobaciones activas con el agente NCPA.
+```
+cd /tmp
+wget https://assets.nagios.com/downloads/ncpa/check_ncpa.tar.gz
+tar -xvzf check_ncpa.tar.gz
+cp check_ncpa.py /usr/local/nagios/libexec/
+```
 
 # Crear la definición del comando check
-Crear el check_ncpa comando en sus archivos de configuración para Nagios Core, normalmente se encuentran en `/usr/local/nagios/etc` usted puede tener un commands.cfg archivo en el que querrá poner este comando
+Cree la definición del comando check_ncpa en sus archivos de configuración de Nagios Core. Generalmente, estos archivos se encuentran en /usr/local/nagios/etc/objects/. Si tiene un archivo llamado commands.cfg, es posible que desee agregar la definición del comando allí.
 
 ```
-definir comando {
-    comando_nombre check_ncpa
-    command_line $USER1$/check_ncpa.py -H $HOSTADDRESS$ $ARG1$
+define command {
+    command_name    check_ncpa
+    command_line    $USER1$/check_ncpa.py -H $HOSTADDRESS$ $ARG1$
 }
 ```
-### Crear cheques de Nagios
-Puede crear las comprobaciones en un archivo de configuración en /usr/local/nagios/etc. Para este ejemplo crearemos un archivo de configuración llamado ncpa.cfg con lo siguiente definido:
+### Crear checks de Nagios
+Ahora puede crear las comprobaciones en un archivo de configuración dentro de /usr/local/nagios/etc/. En este ejemplo, crearemos un archivo de configuración llamado ncpa.cfg con las siguientes definiciones:
 ```
-definir host {
-    host_name NCPA 2 Anfitrión
-    dirección 192.168.1.10
-    check_command check_ncpa!-t 'mytoken' - P 5693 - Sistema/agente_versión
-    max_check_intentos 5
-    check_intervalo 5
-    retry_intervalo 1
-    check_período 24x7
-    contactos nagiosadmin
-    notificación_intervalo 60
-    notificación_período 24x7
-    notificaciones_habilitado 1
-    icon_imagen ncpa.png
-    statusmap_imagen ncpa.png
-    registro 1
+define host {
+    host_name               cliente_1
+    address                 192.168.1.10
+    check_command           check_ncpa!-t 'mytoken' -P 5693 -M system/agent_version
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          1
+    check_period            24x7
+    contacts                nagiosadmin
+    notification_interval   60
+    notification_period     24x7
+    notifications_enabled   1
+    icon_image              ncpa.png
+    statusmap_image         ncpa.png
+    register                1
 }
 
-definir servicio {
-    host_name NCPA 2 Anfitrión
-    service_description Uso de CPU
-    check_command check_ncpa!-t 'mytoken' -P 5693 -M cpu/porcentaje -w 20 -c 40 -q 'aggregate=avg'
-    max_check_intentos 5
-    check_intervalo 5
-    retry_intervalo 1
-    check_período 24x7
-    notificación_intervalo 60
-    notificación_período 24x7
-    contactos nagiosadmin
-    registro 1
+define service {
+    host_name               cliente_1
+    service_description     CPU Usage
+    check_command           check_ncpa!-t 'mytoken' -P 5693 -M cpu/percent -w 20 -c 40 -q 'aggregate=avg'
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          1
+    check_period            24x7
+    notification_interval   60
+    notification_period     24x7
+    contacts                nagiosadmin
+    register                1
 }
 
-definir servicio {
-    host_name NCPA 2 Anfitrión
-    service_description Uso de la memoria
-    check_command check_ncpa!-t 'mytoken' - P 5693 -M memoria/virtual - w 50 - c 80 - u G
-    max_check_intentos 5
-    check_intervalo 5
-    retry_intervalo 1
-    check_período 24x7
-    notificación_intervalo 60
-    notificación_período 24x7
-    contactos nagiosadmin
-    registro 1
+define service {
+    host_name               cliente_1
+    service_description     Memory Usage
+    check_command           check_ncpa!-t 'mytoken' -P 5693 -M memory/virtual -w 50 -c 80 -u G
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          1
+    check_period            24x7
+    notification_interval   60
+    notification_period     24x7
+    contacts                nagiosadmin
+    register                1
 }
 
-definir servicio {
-    host_name NCPA 2 Anfitrión
-    conteo de Procesos Service_Description
-    check_command check_ncpa!-t 'mytoken' - P 5693 - Procesos M - w 150 - c 200
-    max_check_intentos 5
-    check_intervalo 5
-    retry_intervalo 1
-    check_período 24x7
-    notificación_intervalo 60
-    notificación_período 24x7
-    contactos nagiosadmin
-    registro 1
+define service {
+    host_name               cliente_1
+    service_description     Process Count
+    check_command           check_ncpa!-t 'mytoken' -P 5693 -M processes -w 150 -c 200
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          1
+    check_period            24x7
+    notification_interval   60
+    notification_period     24x7
+    contacts                nagiosadmin
+    register                1
 }
 ```
 > [!NOTE]
-> Reemplazar el -t 'mytoken' con tu propio token. Esto le dirá a Nagios que realice comprobaciones activas y creará un host llamado "NCPA 2 Host" con comprobaciones de Uso de CPU, Uso de Memoria y Recuento de Procesos.
+> Reemplace -t `'mytoken'` con su propio token y también cambie la dirección IP de `address` con la IP de su host monitoreado. Esto indicará a Nagios que realice comprobaciones activas y creará un host denominado `"cliente_1"` con las comprobaciones de Uso de CPU, Uso de Memoria y Recuento de Procesos.
 
-### Reinicie Nagios y espere los controles activos
-Reinicie el servicio de Nagios y debería ver aparecer `hosts/servicios` pendientes. Una vez que hagan sus comprobaciones iniciales, debería ver sus datos de NCPA en Nagios.
+### Reiniciar Nagios y verificar los controles activos 
+Reinicie el servicio de Nagios, y los hosts/servicios deberían aparecer como pendientes. Una vez que se realicen las comprobaciones iniciales, podrá ver los datos de NCPA en Nagios.
