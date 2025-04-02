@@ -1,5 +1,3 @@
-
-
 # **Instalación de Nagios Core**
 
 ## **Requisitos del sistema**
@@ -151,11 +149,9 @@ Inicia sesión con el nombre de usuario `nagiosadmin` y la contraseña que confi
 
 Ten en cuenta que solo se ha instalado el motor de Nagios Core y verás errores relacionados con los hosts y servicios, ya que no se ha configurado nada aún para monitorear.
 
-## **Instalación de Nagios Plugins**
+# **Instalación de Nagios Plugins**
 
 Nagios Core requiere de plugins para funcionar correctamente. Sigue estos pasos para instalar los **Nagios Plugins**.
-
-## **Prerequisitos:**
 
 Asegúrate de tener instalados los siguientes paquetes
 
@@ -197,7 +193,8 @@ Apunta tu navegador a la dirección IP o FQDN de tu servidor Nagios Core:
 
 Ve a un objeto de host o servicio y selecciona "Reprogramar la siguiente verificación" en el menú de Comandos. El error anterior debería desaparecer y ahora se mostrará la salida correcta.
 
-> [!Note] Puedes controlar el servicio de Nagios con los siguientes comandos:
+> [!Note] 
+> Puedes controlar el servicio de Nagios con los siguientes comandos:
 
 ```bash
 systemctl start nagios.service   # Inicia el servicio de Nagios
