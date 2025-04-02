@@ -1,8 +1,8 @@
 
 
-# Instalación de Nagios Core
+# **Instalación de Nagios Core**
 
-## Requisitos del Sistema
+## **Requisitos del sistema**
 
 La instalación de Nagios Core se realizará en un sistema con las siguientes características mínimas:
 
@@ -11,14 +11,14 @@ La instalación de Nagios Core se realizará en un sistema con las siguientes ca
 - **Memoria RAM:** 4 GB
 - **CPU:** 4 vCPUs
 
-## Requisitos Previos
+## **Requisitos previos**
 
 Antes de proceder con la instalación de Nagios Core, asegúrate de que el sistema esté:
 
 1. **Licenciado con Red Hat:** El sistema debe contar con una licencia activa de Red Hat.
 2. **Actualizado:** El sistema operativo debe estar actualizado con los últimos parches y actualizaciones disponibles.
 
-## Para empezar con la instalación de Nagios Core
+## **Para empezar con la instalación de Nagios Core**
 Asegúrate de que los siguientes paquetes estén instalados en tu sistema. Ejecuta los siguientes comandos para instalar las dependencias necesarias:
 
 
@@ -27,7 +27,7 @@ dnf install -y gcc glibc glibc-common perl httpd php wget gd gd-devel
 dnf install -y openssl-devel
 ```
 
-## Descargar el Código Fuente
+## **Descargar el código fuente**
 
 Descarga el código fuente de Nagios Core desde el repositorio oficial:
 
@@ -37,7 +37,7 @@ wget --output-document="nagioscore.tar.gz" $(wget -q -O - https://api.github.com
 tar xzf nagioscore.tar.gz
 ```
 
-## Compilación
+## **Compilación**
 
 Accede a la carpeta donde descargaste el código fuente:
 
@@ -52,7 +52,7 @@ Configura y compila Nagios Core:
 make all
 ```
 
-## Crear Usuario y Grupo
+## **Crear usuario y grupo**
 
 Este paso crea el usuario y grupo `nagios`, y añade el usuario `apache` al grupo `nagios` para que Apache pueda interactuar con Nagios.
 
@@ -61,7 +61,7 @@ make install-groups-users
 usermod -a -G nagios apache
 ```
 
-## Instalar los Archivos Binarios
+## **Instalar los archivos binarios**
 
 Instala los archivos binarios, los CGIs y los archivos HTML necesarios para Nagios Core:
 
@@ -69,7 +69,7 @@ Instala los archivos binarios, los CGIs y los archivos HTML necesarios para Nagi
 make install
 ```
 
-## Configuración del Servicio
+## **Configuración del servicio**
 
 Instala los scripts de inicio del servicio para que Nagios se inicie automáticamente con el sistema.
 
@@ -78,7 +78,7 @@ make install-daemoninit
 systemctl enable --now httpd.service
 ```
 
-## Instalar el Modo de Comandos
+## **Instalar el modo de comandos**
 
 Este paso instala y configura el archivo de comandos externos de Nagios.
 
@@ -86,7 +86,7 @@ Este paso instala y configura el archivo de comandos externos de Nagios.
 make install-commandmode
 ```
 
-## Instalar los Archivos de Configuración
+## **Instalar los archivos de configuración**
 
 Instala los archivos de configuración de ejemplo necesarios para que Nagios pueda arrancar correctamente:
 
@@ -94,7 +94,7 @@ Instala los archivos de configuración de ejemplo necesarios para que Nagios pue
 make install-config
 ```
 
-## Instalar Archivos de Configuración de Apache
+## **Instalar archivos de configuración de apache**
 
 Este paso instala los archivos de configuración de Apache para integrarlos con Nagios:
 
@@ -102,7 +102,7 @@ Este paso instala los archivos de configuración de Apache para integrarlos con 
 make install-webconf
 ```
 
-## Configurar el Firewall
+## **Configurar el firewall**
 
 Abre el puerto 80 en el firewall para permitir el acceso a la interfaz web de Nagios:
 
@@ -111,7 +111,7 @@ firewall-cmd --zone=public --add-port=80/tcp --permanent
 firewall-cmd --zone=public --reload
 ```
 
-## Crear la Cuenta de Usuario `nagiosadmin`
+## **Crear la cuenta de usuario `nagiosadmin`**
 
 Para poder acceder a la interfaz web de Nagios, crea la cuenta `nagiosadmin`:
 
@@ -122,7 +122,7 @@ htpasswd -c /usr/local/nagios/etc/htpasswd.users nagiosadmin
 > [!NOTE]
 > Cuando agregues usuarios adicionales en el futuro, no uses `-c` para evitar reemplazar la cuenta `nagiosadmin`.*
 
-## Iniciar el Servicio de Apache
+## **Iniciar el servicio de apache**
 
 Inicia el servicio de Apache para servir la interfaz web de Nagios:
 
@@ -130,7 +130,7 @@ Inicia el servicio de Apache para servir la interfaz web de Nagios:
 systemctl enable --now httpd.service
 ```
 
-## Iniciar el Servicio de Nagios
+## **Iniciar el servicio de Nagios**
 
 Inicia el servicio de Nagios para comenzar a monitorear:
 
@@ -138,7 +138,7 @@ Inicia el servicio de Nagios para comenzar a monitorear:
 systemctl enable --now nagios.service
 ```
 
-## Probar Nagios
+## **Probar Nagios**
 
 Una vez instalado y configurado Nagios Core, accede a la interfaz web utilizando la IP o FQDN de tu servidor Nagios Core:
 
@@ -151,7 +151,7 @@ Inicia sesión con el nombre de usuario `nagiosadmin` y la contraseña que confi
 
 Ten en cuenta que solo se ha instalado el motor de Nagios Core y verás errores relacionados con los hosts y servicios, ya que no se ha configurado nada aún para monitorear.
 
-## Instalación de Nagios Plugins
+## **Instalación de Nagios Plugins**
 
 Nagios Core requiere de plugins para funcionar correctamente. Sigue estos pasos para instalar los **Nagios Plugins**.
 
@@ -163,7 +163,7 @@ Asegúrate de tener instalados los siguientes paquetes
 dnf install -y gcc glibc glibc-common make gettext automake autoconf wget openssl-devel net-snmp net-snmp-utils
 ```
 
-## Descargar el Código Fuente de los Plugins
+## **Descargar el código fuente de los plugins**
 
 Descarga el código fuente de los plugins desde el repositorio oficial:
 
@@ -173,7 +173,7 @@ wget --output-document="nagios-plugins.tar.gz" $(wget -q -O - https://api.github
 tar zxf nagios-plugins.tar.gz
 ```
 
-## Compilación e Instalación de los Plugins
+## **Compilación e instalación de los Plugins**
 
 Compila e instala los plugins:
 
@@ -184,7 +184,7 @@ make
 make install
 ```
 
-## Probar los Plugins
+## **Probar los Plugins**
 
 Accede a la interfaz web de Nagios y realiza una verificación en un objeto de host o servicio:
 
@@ -206,7 +206,7 @@ systemctl restart nagios.service # Reinicia el servicio de Nagios
 systemctl status nagios.service  # Muestra el estado del servicio de Nagios
 ```
 
-# Instalación del primer cliente Nagios, utilizando el agente NCPA.
+# **Instalación del primer cliente Nagios, utilizando el agente NCPA.**
 
 La instalación del cliente Nagios se realizará en un sistema con las siguientes características:
 
@@ -215,18 +215,18 @@ La instalación del cliente Nagios se realizará en un sistema con las siguiente
 - **Memoria RAM:** 2 GB
 - **CPU:** 1 vCPUs
 
-### El primer paso es instalar el repositorio
+### **El primer paso es instalar el repositorio**
 
 ```
 rpm -Uvh https://repo.nagios.com/nagios/8/nagios-repo-8-2.el8.noarch.rpm
 ```
 
-### Una vez instalado el repositorio, deberá ejecutar el siguiente comando para instalar NCPA:
+### **Una vez instalado el repositorio, deberá ejecutar el siguiente comando para instalar NCPA:**
 ```
 dnf install ncpa -y
 ```
 
-### Ejecute el siguiente comando para abrir el archivo de configuración del agente.
+### **Ejecute el siguiente comando para abrir el archivo de configuración del agente.**
 ```
 sudo vi /usr/local/ncpa/etc/ncpa.cfg
 ```
@@ -244,14 +244,14 @@ Ahora deberá reiniciar el servicio `ncpa` para que los cambios surtan efecto.
 ```
 systemctl restart ncpa.service
 ```
-### Configurar el firewall 
+### **Configurar el firewall**
 Es necesario crear una regla de firewall en su equipo Linux para permitir el tráfico entrante a NCPA en el puerto TCP 5693
 ```
 firewall-cmd --add-port=5693/tcp –-permanent
 firewall-cmd --reload
 ```
 
-### Probar NCPA
+### **Probar NCPA**
 Para asegurarse de que la instalación se realizó correctamente y que NCPA está funcionando, acceda a su interfaz web. Para ello, necesitará:
 
 La dirección IP del equipo donde instaló NCPA.
@@ -269,7 +269,7 @@ Es posible que el navegador muestre una advertencia de seguridad. Esto ocurre po
 Para continuar, haga clic en "Avanzado" y luego en "Agregar excepción" o "Continuar a xxx", según el navegador que esté utilizando.
 
 
-# Iniciar monitoreo en Nagios Core
+# **Iniciar monitoreo en Nagios Core**
 Para monitorear equipos mediante comprobaciones activas, puede utilizar el Asistente de configuración de NCPA.
 Esto descarga, descomprime y copia el plugin check_ncpa.py al directorio de plugins de Nagios, donde se utilizará para realizar comprobaciones activas con el agente NCPA.
 ```
@@ -279,7 +279,7 @@ tar -xvzf check_ncpa.tar.gz
 cp check_ncpa.py /usr/local/nagios/libexec/
 ```
 
-# Crear la definición del comando check
+# **Crear la definición del comando check**
 Cree la definición del comando check_ncpa en sus archivos de configuración de Nagios Core. Generalmente, estos archivos se encuentran en /usr/local/nagios/etc/objects/. Si tiene un archivo llamado commands.cfg, es posible que desee agregar la definición del comando allí.
 
 ```
@@ -288,7 +288,7 @@ define command {
     command_line    $USER1$/check_ncpa.py -H $HOSTADDRESS$ $ARG1$
 }
 ```
-### Crear checks de Nagios
+### **Crear checks de Nagios**
 Ahora puede crear las comprobaciones en un archivo de configuración dentro de /usr/local/nagios/etc/. En este ejemplo, crearemos un archivo de configuración llamado ncpa.cfg con las siguientes definiciones:
 ```
 define host {
@@ -353,5 +353,5 @@ define service {
 > [!NOTE]
 > Reemplace -t `'mytoken'` con su propio token y también cambie la dirección IP de `address` con la IP de su host monitoreado. Esto indicará a Nagios que realice comprobaciones activas y creará un host denominado `"cliente_1"` con las comprobaciones de Uso de CPU, Uso de Memoria y Recuento de Procesos.
 
-### Reiniciar Nagios y verificar los controles activos 
+### **Reiniciar Nagios y verificar los controles activos**
 Reinicie el servicio de Nagios, y los hosts/servicios deberían aparecer como pendientes. Una vez que se realicen las comprobaciones iniciales, podrá ver los datos de NCPA en Nagios.
