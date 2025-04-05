@@ -352,3 +352,35 @@ define service {
 
 ### **Reiniciar Nagios y verificar los controles activos**
 Reinicie el servicio de Nagios, y los hosts/servicios deberían aparecer como pendientes. Una vez que se realicen las comprobaciones iniciales, podrá ver los datos de NCPA en Nagios.
+
+
+# Errores SELinux
+
+El error tiene que ver con los permisos de `SELinux` y cómo está configurado el acceso a los archivos que necesita Nagios para funcionar correctamente, específicamente el archivo nagios.cmd que se encuentra en la ruta /usr/local/nagios/var/rw/nagios.cmd.
+
+El error en el log de `SELinux` (avc: denied { getattr }) indica que el proceso de Apache (cmd.cgi) intentó acceder al archivo nagios.cmd, pero `SELinux` bloqueó ese acceso debido a que el archivo no tenía el contexto adecuado.
+
+```
+`type=AVC msg=audit(1743887453.397:1378): avc:  denied  { getattr } for  pid=13389 comm="cmd.cgi" path="/usr/local/nagios/var/rw/nagios.cmd" dev="dm-0" ino=17804920 scontext=system_u:system_r:httpd_sys_script_t:s0 tcontext=system_u:object_r:usr_t:s0 tclass=fifo_file permissive=0`
+```
+
+### Solución aplicada
+Estas tres líneas aplican los contextos de SELinux adecuados a las carpetas de Nagios para que Apache pueda acceder a ellas. Utiliza el comando --reference para asignar el contexto de las carpetas de Apache (/var/www/html, /var/www/cgi-bin) a las carpetas de Nagios correspondientes.
+
+```
+`chcon -R --reference=/var/www/html /usr/local/nagios/share` # Asigna el contexto de /var/www/html (donde Apache normalmente sirve contenido web) a la carpeta /usr/local/nagios/share, donde se encuentran los archivos web de Nagios.
+
+`chcon -R --reference=/var/www/html /usr/local/nagios/var` # Aplica el contexto de /var/www/html a la carpeta /usr/local/nagios/var, que almacena archivos de datos de Nagios.
+
+`chcon -R --reference=/var/www/cgi-bin /usr/local/nagios/sbin` # Asigna el contexto de ejecución de CGI (usualmente en /var/www/cgi-bin) a la carpeta /usr/local/nagios/sbin, que contiene los archivos ejecutables de Nagios.
+```
+
+### Permitir acceso de escritura a la carpeta rw
+Este comando asegura que Apache pueda acceder a la carpeta rw dentro de /usr/local/nagios/var/, dándole permisos de escritura. Esto es necesario porque el archivo nagios.cmd está en esta carpeta y se necesita acceso de escritura para que Nagios pueda enviarle comandos desde la interfaz web.
+
+```
+chcon -R -t httpd_sys_rw_content_t /usr/local/nagios/var/rw
+```
+
+Referencias
+https://support.nagios.com/forum/viewtopic.php?t=5002
