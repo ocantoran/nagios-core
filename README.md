@@ -420,7 +420,7 @@ nagios    ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart sshd
 ```
 
 > [!CAUTION] 
-> Es importante realizar esta modificación de forma segura usando el comando visudo, ya que este validará la sintaxis antes de guardar los cambios, evitando posibles errores de configuración.
+> Es importante realizar esta modificación de forma segura usando el comando `visudo`, ya que este validará la sintaxis antes de guardar los cambios, evitando posibles errores de configuración.
 
 
 ### Creación del script para reiniciar el servicio
@@ -438,7 +438,7 @@ exit 0
 Para que el event handler funcione correctamente, es necesario verificar que el plugin check_ncpa esté correctamente configurado para comunicarse con el cliente. El comando utilizado en el archivo de servicio de Nagios es el siguiente:
 
 ```
-check_ncpa! -t -H IP_ADDRESS 'hubtech' -P 5693 -M 'services' -q 'service=sshd,status=running'
+check_ncpa! -t -H IP_ADDRESS 'token' -P 5693 -M 'services' -q 'service=sshd,status=running'
 ```
 
 
