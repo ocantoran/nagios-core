@@ -361,18 +361,18 @@ El error tiene que ver con los permisos de `SELinux` y cómo está configurado e
 El error en el log de `SELinux` (avc: denied { getattr }) indica que el proceso de Apache (cmd.cgi) intentó acceder al archivo nagios.cmd, pero `SELinux` bloqueó ese acceso debido a que el archivo no tenía el contexto adecuado.
 
 ```
-`type=AVC msg=audit(1743887453.397:1378): avc:  denied  { getattr } for  pid=13389 comm="cmd.cgi" path="/usr/local/nagios/var/rw/nagios.cmd" dev="dm-0" ino=17804920 scontext=system_u:system_r:httpd_sys_script_t:s0 tcontext=system_u:object_r:usr_t:s0 tclass=fifo_file permissive=0`
+type=AVC msg=audit(1743887453.397:1378): avc:  denied  { getattr } for  pid=13389 comm="cmd.cgi" path="/usr/local/nagios/var/rw/nagios.cmd" dev="dm-0" ino=17804920 scontext=system_u:system_r:httpd_sys_script_t:s0 tcontext=system_u:object_r:usr_t:s0 tclass=fifo_file permissive=0
 ```
 
 ### Solución aplicada
 Estas tres líneas aplican los contextos de SELinux adecuados a las carpetas de Nagios para que Apache pueda acceder a ellas. Utiliza el comando --reference para asignar el contexto de las carpetas de Apache (/var/www/html, /var/www/cgi-bin) a las carpetas de Nagios correspondientes.
 
 ```
-`chcon -R --reference=/var/www/html /usr/local/nagios/share` # Asigna el contexto de /var/www/html (donde Apache normalmente sirve contenido web) a la carpeta /usr/local/nagios/share, donde se encuentran los archivos web de Nagios.
+chcon -R --reference=/var/www/html /usr/local/nagios/share # Asigna el contexto de /var/www/html (donde Apache normalmente sirve contenido web) a la carpeta /usr/local/nagios/share, donde se encuentran los archivos web de Nagios.
 
-`chcon -R --reference=/var/www/html /usr/local/nagios/var` # Aplica el contexto de /var/www/html a la carpeta /usr/local/nagios/var, que almacena archivos de datos de Nagios.
+chcon -R --reference=/var/www/html /usr/local/nagios/var # Aplica el contexto de /var/www/html a la carpeta /usr/local/nagios/var, que almacena archivos de datos de Nagios.
 
-`chcon -R --reference=/var/www/cgi-bin /usr/local/nagios/sbin` # Asigna el contexto de ejecución de CGI (usualmente en /var/www/cgi-bin) a la carpeta /usr/local/nagios/sbin, que contiene los archivos ejecutables de Nagios.
+chcon -R --reference=/var/www/cgi-bin /usr/local/nagios/sbin # Asigna el contexto de ejecución de CGI (usualmente en /var/www/cgi-bin) a la carpeta /usr/local/nagios/sbin, que contiene los archivos ejecutables de Nagios.
 ```
 
 ### Permitir acceso de escritura a la carpeta rw
@@ -384,3 +384,60 @@ chcon -R -t httpd_sys_rw_content_t /usr/local/nagios/var/rw
 
 Referencias
 https://support.nagios.com/forum/viewtopic.php?t=5002
+
+# Definir un `event_handler` en `Nagios Core`
+
+El proceso de configurar un event handler en `Nagios Core`, el cual se ejecutará en el cliente para reiniciar automáticamente el servicio SSH (sshd) en caso de que falle. El objetivo es asegurar que, si el servicio SSH no está en ejecución, se reinicie de forma automática sin intervención manual.
+
+### Definición del event_handler
+El primer paso consiste en configurar el event handler en el servidor Nagios. Este event handler se ejecutará cuando Nagios detecte que el servicio SSH ha fallado en el cliente.
+
+Para ello, se editó el archivo de configuración /usr/local/nagios/etc/servers/HOST.cfg del servicio en Nagios, añadiendo la siguiente definición:
+```
+define service {
+    host_name               cliente-1
+    service_description     Service SSH
+    check_command           check_ncpa!-t 'token' -P 5693 -M services -q 'service=sshd,status=running'
+    max_check_attempts      5
+    check_interval          5
+    retry_interval          1
+    check_period            24x7
+    notification_interval   60
+    notification_period     24x7
+    contacts                nagiosadmin
+    register                1
+    event_handler           check_ncpa! -t 'token' -p 5693 -M 'plugins/restart_services.sh'
+}
+```
+
+### Configuración de permisos en el cliente
+Para permitir que el script de reinicio del servicio SSH se ejecute sin pedir una contraseña, es necesario modificar el archivo /etc/sudoers en el cliente.
+
+Esto otorga al usuario nagios permisos para ejecutar el comando `systemctl restart sshd` sin requerir una contraseña. Este paso es esencial para que el script pueda reiniciar el servicio SSH sin intervención manual.
+
+```
+nagios    ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart sshd
+```
+
+> [!CAUTION] Es importante realizar esta modificación de forma segura usando el comando visudo, ya que este validará la sintaxis antes de guardar los cambios, evitando posibles errores de configuración.
+
+
+### Creación del script para reiniciar el servicio
+En el cliente, se creó un script llamado restart_services.sh que se encarga de reiniciar el servicio SSH utilizando el comando systemctl restart sshd.
+
+El script se ubicó en el directorio `/usr/local/ncpa/plugins/` en el cliente y se configuró con permisos de ejecución adecuados para el usuario nagios.
+
+```
+#!/bin/bash
+sudo systemctl restart sshd
+exit 0
+```
+
+### Verificación del comando `NCPA` en Nagios Core
+Para que el event handler funcione correctamente, es necesario verificar que el plugin check_ncpa esté correctamente configurado para comunicarse con el cliente. El comando utilizado en el archivo de servicio de Nagios es el siguiente:
+
+```
+check_ncpa! -t -H IP_ADDRESS 'hubtech' -P 5693 -M 'services' -q 'service=sshd,status=running'
+```
+
+
