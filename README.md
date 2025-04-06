@@ -419,7 +419,8 @@ Esto otorga al usuario nagios permisos para ejecutar el comando `systemctl resta
 nagios    ALL=(ALL) NOPASSWD: /usr/bin/systemctl restart sshd
 ```
 
-> [!CAUTION] Es importante realizar esta modificación de forma segura usando el comando visudo, ya que este validará la sintaxis antes de guardar los cambios, evitando posibles errores de configuración.
+> [!CAUTION] 
+> Es importante realizar esta modificación de forma segura usando el comando visudo, ya que este validará la sintaxis antes de guardar los cambios, evitando posibles errores de configuración.
 
 
 ### Creación del script para reiniciar el servicio
